@@ -95,7 +95,10 @@ for f in deb822.Packages.iter_paragraphs(open(os.path.join(pkgdir, "debian/tests
             gottest = True
         if k == "Depends":
             assert gottest
-            tests[-1].add_depends(v)
+            if v == "@":
+                tests[-1].add_depends(", ".join(loc_pkg_names))
+            else:
+                tests[-1].add_depends(v)
             gottest = False
 
 
