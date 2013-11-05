@@ -42,7 +42,7 @@ class Test:
     def __init__(self, name):
         self.name = name
         self.depends = []
-    def add_depends(self, d):
+    def parse_depends(self, d):
         self.depends = set([x.split()[0] for x in d.split(",")  if "libc" not in x])
 
 
@@ -96,11 +96,15 @@ for f in deb822.Packages.iter_paragraphs(open(os.path.join(pkgdir, "debian/tests
         if k == "Depends":
             assert gottest
             if v == "@":
-                tests[-1].add_depends(", ".join(loc_pkg_names))
+                tests[-1].depends = list(loc_pkg_names)
             else:
-                tests[-1].add_depends(v)
+                tests[-1].parse_depends(v)
             gottest = False
 
+# no Depends means implicit @
+for t in tests:
+    if not t.depends:
+        t.depends = list(loc_pkg_names)
 
 # copy the local pacakges
 for pkg in loc_pkg_paths:
