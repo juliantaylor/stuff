@@ -42,11 +42,12 @@ class Test:
     def __init__(self, name):
         self.name = name
         self.depends = []
+        self.restrictions = []
     def parse_depends(self, d):
         self.depends = set([x.split()[0] for x in d.split(",")  if "libc" not in x])
 
 
-target = "raring"
+target = "saucy"
 dsc = os.path.abspath(sys.argv[1])
 loc_pkg_paths = set()
 loc_pkg_names = set()
@@ -86,20 +87,19 @@ with_exp = "-t experimental" if target == "experimental" else ""
 
 # gather tests
 tests = []
-gottest = False
 for f in deb822.Packages.iter_paragraphs(open(os.path.join(pkgdir, "debian/tests/control"))):
     for k, v in f.iteritems():
         if k == "Tests":
-            assert not gottest
             tests.append(Test(v))
-            gottest = True
-        if k == "Depends":
-            assert gottest
+        elif k == "Depends":
             if v == "@":
                 tests[-1].depends = list(loc_pkg_names)
             else:
                 tests[-1].parse_depends(v)
-            gottest = False
+        elif k == "Restrictions":
+            if v.lower() in ("breaks-testbed", "rw-build-tree"):
+                raise ValueError("Restriction %s not supported" % v)
+            tests[-1].restrictions.append(v)
 
 # no Depends means implicit @
 for t in tests:
@@ -134,13 +134,15 @@ with open("runscript.sh", "w") as f:
             f.write("apt-get install -f -y --force-yes %s\n" % with_exp)
         all_installed = " ".join(t.depends | dpkgdep)
 
+        asuser = "" if "needs-root" in t.restrictions else "su adttesting -c"
+
         f.write("""\
 apt-get install -y --force-yes {aptdep}
 rm -rf /tmp/sadt
 mkdir -p /tmp/sadt
 chown adttesting /tmp/sadt
 set +e
-TMPDIR=/tmp/sadt ADTTMP=/tmp/sadt su adttesting -c debian/tests/{testname} 2> errlog
+TMPDIR=/tmp/sadt ADTTMP=/tmp/sadt {asuser} debian/tests/{testname} 2> errlog
 ret=$?
 set -e
 if [ ! $(cat errlog | wc -l) -eq 0 ]; then
@@ -153,7 +155,7 @@ if [ $ret -ne 0 ]; then
   echo FAILURE $ret;
   exit $ret;
 fi
-""".format(aptdep=aptdep, testname=t.name))
+""".format(aptdep=aptdep, testname=t.name, asuser=asuser))
 
         if t != tests[-1] and "--fast" not in sys.argv:
             f.write("apt-get autoremove -y --force-yes --purge %s\n" % all_installed)
