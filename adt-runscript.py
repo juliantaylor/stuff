@@ -47,7 +47,7 @@ class Test:
         self.depends = set([x.split()[0] for x in d.split(",")  if "libc" not in x])
 
 
-target = "saucy"
+target = "trusty"
 dsc = os.path.abspath(sys.argv[1])
 loc_pkg_paths = set()
 loc_pkg_names = set()
@@ -149,10 +149,14 @@ if [ ! $(cat errlog | wc -l) -eq 0 ]; then
   echo 'STDERR LOG:';
   cat errlog;
   echo STDERR FAILURE;
+  apt-get install -y vim less
+  /bin/bash < /dev/tty > /dev/tty 2> /dev/tty
   exit 1;
 fi
 if [ $ret -ne 0 ]; then
   echo FAILURE $ret;
+  apt-get install -y vim less
+  /bin/bash < /dev/tty > /dev/tty 2> /dev/tty
   exit $ret;
 fi
 """.format(aptdep=aptdep, testname=t.name, asuser=asuser))
