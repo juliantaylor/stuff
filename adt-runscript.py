@@ -118,7 +118,7 @@ with open("runscript.sh", "w") as f:
     f.write("#!/bin/bash\n")
     f.write("set -xe\n")
     # same id as pbuilder for firewalling
-    f.write("useradd -u 1234 adttesting\n")
+    f.write("id adttesting || useradd -u 1234 adttesting\n")
     f.write("cd %s\n" % os.path.join(tmp, pkgdir))
     for t in tests:
         aptdep = " ".join(t.depends - loc_pkg_names)
