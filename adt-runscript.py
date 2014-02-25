@@ -119,6 +119,8 @@ with open("runscript.sh", "w") as f:
     f.write("set -xe\n")
     # same id as pbuilder for firewalling
     f.write("id adttesting || useradd -u 1234 adttesting\n")
+    # remove build-essential usually present in packaging chroots
+    f.write("apt-get remove -f -y --force-yes libc6-dev gcc g++ make dpkg-dev\n")
     f.write("cd %s\n" % os.path.join(tmp, pkgdir))
     for t in tests:
         aptdep = " ".join(t.depends - loc_pkg_names)
@@ -162,6 +164,8 @@ fi
 """.format(aptdep=aptdep, testname=t.name, asuser=asuser))
 
         if t != tests[-1] and "--fast" not in sys.argv:
+            # remove build-essential usually present in packaging chroots
+            f.write("apt-get remove -f -y --force-yes libc6-dev gcc g++ make dpkg-dev\n")
             f.write("apt-get autoremove -y --force-yes --purge %s\n" % all_installed)
     f.write("echo SUCCESS\n")
 
