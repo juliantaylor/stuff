@@ -125,11 +125,15 @@ with open("runscript.sh", "w") as f:
     for t in tests:
         aptdep = " ".join(t.depends - loc_pkg_names)
 
-        # resolve local dependencies, only one level, but should be enough for most packages
+        # resolve local dependencies
         dpkgdep = loc_pkg_names & t.depends
-        for d in list(dpkgdep):
-            print t.name, d, list(loc_pkg_deps[d])
-            dpkgdep = dpkgdep.union(loc_pkg_deps[d])
+        plen = 0
+        while len(dpkgdep) != plen:
+            plen = len(dpkgdep)
+            for d in list(dpkgdep):
+                if d in loc_pkg_deps:
+                    print t.name, d, list(loc_pkg_deps[d])
+                    dpkgdep = dpkgdep.union(loc_pkg_deps[d])
         if dpkgdep:
             dpkgdeppath = [os.path.join(tmp, d) for d in loc_pkg_paths if d.split("_")[0] in dpkgdep]
             f.write("dpkg -i %s || true\n" % " ".join(dpkgdeppath))
