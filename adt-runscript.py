@@ -122,6 +122,7 @@ with open("runscript.sh", "w") as f:
     # remove build-essential usually present in packaging chroots
     f.write("apt-get remove -f -y --force-yes libc6-dev gcc g++ make dpkg-dev\n")
     f.write("cd %s\n" % os.path.join(tmp, pkgdir))
+    f.write("chmod a-w -R .\n")
     for t in tests:
         aptdep = " ".join(t.depends - loc_pkg_names)
 
