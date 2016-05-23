@@ -87,7 +87,7 @@ with_exp = "-t experimental" if target == "experimental" else ""
 
 # gather tests
 tests = []
-for f in deb822.Packages.iter_paragraphs(open(os.path.join(pkgdir, "debian/tests/control"))):
+for f in deb822.Deb822.iter_paragraphs(open(os.path.join(pkgdir, "debian/tests/control"))):
     for k, v in f.iteritems():
         if k == "Tests":
             tests.append(Test(v))
