@@ -53,7 +53,7 @@ def demangle(s):
         p = sp.Popen(['c++filt', s], stdout=sp.PIPE)
         return p.communicate(s)[0]
     else:
-        p = sp.Popen(['c++filt'] + s, stdout=sp.PIPE)
+        p = sp.Popen(['c++filt'] + list(s), stdout=sp.PIPE)
         return p.communicate(s)[0].splitlines()
 
 
@@ -61,12 +61,13 @@ jtraces = dict()
 trace = None
 for l in sys.stdin:
     if not l.strip():
-	key = tuple(trace.bt)
-	if key in jtraces:
-	    jtraces[key].data['count'] += trace.data['count']
-	else:
-	    trace.bt = demangle(trace.bt)
-	    jtraces[key] = trace
+        key = tuple(trace.bt)
+        if key in jtraces:
+            jtraces[key].data['count'] += trace.data['count']
+        else:
+            fun = demangle(x[0] for x in trace.bt)
+            trace.bt = [' '.join(y) for y in zip(fun, (x[1] for x in trace.bt))]
+            jtraces[key] = trace
         trace = None
         continue
     if trace is None:
@@ -76,8 +77,9 @@ for l in sys.stdin:
         trace.fun = fun[:-1]
         trace.data = parse_data(trace.fun, rest)
     else:
+        # addr2line could be used to get line number in function
         addr, fun, rest = l.split(None, 2)
-        trace.bt.append(fun)
+        trace.bt.append((fun, addr))
 
 
 for t in jtraces.values():
