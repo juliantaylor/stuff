@@ -144,7 +144,7 @@ with open("runscript.sh", "w") as f:
         asuser = "" if "needs-root" in t.restrictions else "su adttesting -c"
 
         f.write("""\
-apt-get install -y --force-yes {aptdep}
+apt-get install -y --force-yes {aptdep} {exp}
 rm -rf /tmp/sadt
 mkdir -p /tmp/sadt
 chown adttesting /tmp/sadt
@@ -166,7 +166,7 @@ if [ $ret -ne 0 ]; then
   /bin/bash < /dev/tty > /dev/tty 2> /dev/tty
   exit $ret;
 fi
-""".format(aptdep=aptdep, testname=t.name, asuser=asuser))
+""".format(aptdep=aptdep, testname=t.name, asuser=asuser, exp=with_exp))
 
         if t != tests[-1] and "--fast" not in sys.argv:
             # remove build-essential usually present in packaging chroots
