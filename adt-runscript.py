@@ -48,6 +48,7 @@ class Test:
 
 
 target = "trusty"
+arch = "amd64"
 dsc = os.path.abspath(sys.argv[1])
 loc_pkg_paths = set()
 loc_pkg_names = set()
@@ -55,6 +56,7 @@ if len(sys.argv) > 2:
     changes = os.path.abspath(sys.argv[2])
     c = deb822.Changes.iter_paragraphs(open(changes)).next()
     target = c["Distribution"]
+    arch = c["Architecture"].split()[0]
     loc_pkg_paths = set([os.path.join(os.path.dirname(changes), x["name"])
                     for x in c["Checksums-Sha1"] if x["name"].endswith("deb")])
     loc_pkg_names = set([os.path.basename(pkg).split("_")[0] for pkg in loc_pkg_paths])
@@ -70,7 +72,8 @@ for dp in loc_pkg_paths:
 
 
 # extract source package
-tmp = "/tmp/sadttmp-%s-%s" % (os.path.basename(dsc).split("_")[0], target) #tempfile.mkdtemp()
+logfile = "/tmp/%s-%s-%s.log" % (os.path.splitext(os.path.basename(dsc))[0], target, arch)
+tmp = "/tmp/sadttmp-%s-%s-%s" % (os.path.basename(dsc).split("_")[0], target, arch) #tempfile.mkdtemp()
 try:
     os.makedirs(tmp)
 except OSError:
@@ -81,7 +84,6 @@ for d in os.listdir("."):
     if os.path.isdir(d) and d.startswith(os.path.basename(dsc).split("_")[0]):
         pkgdir = d
         break
-logfile = os.path.splitext(os.path.basename(dsc))[0] + ".log"
 
 with_exp = "-t experimental" if target == "experimental" else ""
 
@@ -175,5 +177,5 @@ fi
     f.write("echo SUCCESS\n")
 
 print 'to run the tests execute:'
-print 'sudo DIST=%s cowbuilder --execute "%s/runscript.sh" --bindmount "%s" --logfile "/tmp/%s"' % (target, tmp, tmp, logfile)
+print 'sudo DIST=%s ARCH=%s cowbuilder --execute "%s/runscript.sh" --bindmount "%s" --logfile "%s"' % (target, arch, tmp, tmp, logfile)
 
