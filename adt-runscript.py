@@ -149,7 +149,7 @@ rm -rf /tmp/sadt
 mkdir -p /tmp/sadt
 chown adttesting /tmp/sadt
 set +e
-TMPDIR=/tmp/sadt ADTTMP=/tmp/sadt {asuser} debian/tests/{testname} 2> errlog
+TMPDIR=/tmp/sadt ADTTMP=/tmp/sadt AUTOPKGTEST_TMP=/tmp/sadt {asuser} debian/tests/{testname} 2> errlog
 ret=$?
 set -e
 if [ ! $(cat errlog | wc -l) -eq 0 ]; then
